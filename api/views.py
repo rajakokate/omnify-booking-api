@@ -12,7 +12,7 @@ from .serializers import FitnessClassSerializer, BookingSerializer
 class FitnessClassList(APIView):
     def get (self, request):
         now = timezone.now()
-        classes = FitnessClass.objects.filter(datetime__get= now).order_by("datetime")
+        classes = FitnessClass.objects.filter(datetime__gte= now).order_by("datetime")
         serializer = FitnessClassSerializer(classes, many=True)
         return Response(serializer.data)
 #POST /book
