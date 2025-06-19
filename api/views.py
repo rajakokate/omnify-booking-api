@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from pytz import timezone as pytz_timezone
+from django.conf import settings
 
 # Create your views here.
 from rest_framework.views  import APIView
@@ -11,10 +13,30 @@ from .serializers import FitnessClassSerializer, BookingSerializer
 #GET /classes
 class FitnessClassList(APIView):
     def get (self, request):
+
+        tz_param = request.query_params.get('tz', 'Asia/Kolkata') # By default tz is India
+        try:
+            user_tz = pytz_timezone(tz_param)
+        except Exception:
+            return Response({"error":"Invalid TimeZone"}, status= status.HTTP_400_BAD_REQUEST)
+
         now = timezone.now()
         classes = FitnessClass.objects.filter(datetime__gte= now).order_by("datetime")
-        serializer = FitnessClassSerializer(classes, many=True)
-        return Response(serializer.data)
+
+        #Converting datetimes to requested timezone
+        data =[]
+        for cls in classes:
+            localized_time = cls.datetime.astimezone(user_tz)
+            data.append({
+                "id":cls.id,
+                "name":cls.name,
+                "datetime": localized_time.strftime("%Y-%m-%d %H:%M:%S"),
+                "instructor": cls.instructor,
+                "available_slots": cls.available_slots
+            })
+        return Response(data)
+    
+    
 #POST /book
 class BookClass (APIView):
     def post (self, request):
@@ -39,3 +61,5 @@ class BookingList(APIView):
         bookings = Booking.objects.filter(client_email = email)
         serializer = BookingSerializer(bookings,many = True)
         return Response(serializer.data)
+    
+
