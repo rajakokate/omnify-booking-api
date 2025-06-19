@@ -21,7 +21,7 @@ class BookClass (APIView):
         serializer=BookingSerializer(data = request.data)
         if serializer.is_valid():
             fitness_Class = serializer.validated_data['fitness_class']
-            if fitness_Class.available_slots > 0:
+            if fitness_Class.available_slots > 0: 
                 fitness_Class.available_slots -=1
                 fitness_Class.save()
                 serializer.save()
